@@ -1,3 +1,67 @@
+// import { QueryClient, type QueryFunction } from "@tanstack/react-query";
+
+// async function throwIfResNotOk(res: Response) {
+//   if (!res.ok) {
+//     const text = (await res.text()) || res.statusText;
+//     throw new Error(`${res.status}: ${text}`);
+//   }
+// }
+
+// export async function apiRequest(
+//   method: string,
+//   url: string,
+//   data?: unknown | undefined,
+// ): Promise<Response> {
+//   const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+//   const res = await fetch(fullUrl, {
+//     method,
+//     headers: data ? { "Content-Type": "application/json" } : {},
+//     body: data ? JSON.stringify(data) : undefined,
+//     credentials: "include",
+//   });
+
+//   await throwIfResNotOk(res);
+//   return res;
+// }
+
+// type UnauthorizedBehavior = "returnNull" | "throw";
+// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// export const getQueryFn: <T>(options: {
+//   on401: UnauthorizedBehavior;
+// }) => QueryFunction<T> =
+//   ({ on401: unauthorizedBehavior }) =>
+//   async ({ queryKey }) => {
+//     const url = queryKey[0] as string;
+//     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+//     const res = await fetch(fullUrl, {
+//       credentials: "include",
+//     });
+
+//     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+//       return null;
+//     }
+
+//     await throwIfResNotOk(res);
+//     return await res.json();
+//   };
+
+// export const queryClient = new QueryClient({
+//   defaultOptions: {
+//     queries: {
+//       queryFn: getQueryFn({ on401: "throw" }),
+//       refetchInterval: false,
+//       refetchOnWindowFocus: false,
+//       staleTime: Infinity,
+//       retry: false,
+//     },
+//     mutations: {
+//       retry: false,
+//     },
+//   },
+// });
+
+
 import { QueryClient, type QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
@@ -7,12 +71,18 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// BASE URL FIX
+const BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:5000";
+const API_BASE_URL = `${BASE}/api`;
+
 export async function apiRequest(
   method: string,
   url: string,
-  data?: unknown | undefined,
+  data?: unknown,
 ): Promise<Response> {
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+
+  const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+
   const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -25,20 +95,20 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
+  ({ on401 }) =>
   async ({ queryKey }) => {
     const url = queryKey[0] as string;
-    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+
     const res = await fetch(fullUrl, {
       credentials: "include",
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+    if (on401 === "returnNull" && res.status === 401) {
       return null;
     }
 
