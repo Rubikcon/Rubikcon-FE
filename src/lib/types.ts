@@ -9,6 +9,7 @@ export interface Game {
   images: string[];
   isOnline: number;
   createdAt: Date;
+  howToPlay?: string;
 }
 
 export interface CartItem {
